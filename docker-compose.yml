@@ -1,0 +1,78 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${AMPQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${AMPQ_PASS}
+      RABBITMQ_DEFAULT_VHOST: ${AMPQ_VHOST}
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${PSQL_USER}
+      POSTGRES_PASSWORD: ${PSQL_PASS}
+      POSTGRES_DB: ${PSQL_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d crawler"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: ./crawler/Dockerfile
+    container_name: go_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${PSQL_USER}
+      DB_PASSWORD: ${PSQL_PASS}
+      DB_NAME: ${PSQL_DB}
+      AMPQ_HOST: rabbitmq
+      AMPQ_PORT: 5672
+      AMPQ_USER: ${AMPQ_USER}
+      AMPQ_PASS: ${AMPQ_PASS}
+      AMPQ_VHOST: ${AMPQ_VHOST}
+    ports:
+      - "8081:8081"
+
+volumes:
+  postgres_data:
+
+secrets:
+  AMPQ_USER:
+    external: true
+  AMPQ_PASS:
+    external: true
+  AMPQ_VHOST:
+    external: true
+  PSQL_USER:
+    external: true
+  PSQL_PASS:
+    external: true
+  PSQL_DB:
+    external: true
