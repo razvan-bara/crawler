@@ -16,6 +16,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
 
   postgres:
@@ -35,6 +37,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
   html_test_server:
     build:
@@ -45,6 +49,8 @@ services:
       - ./html_test_server/html_pages:/app/html_pages
     ports:
       - "8080:8080"
+    networks:
+      - app_network
 
   app:
     build:
@@ -72,9 +78,15 @@ services:
       AMPQ_VHOST: ${AMPQ_VHOST}
     ports:
       - "8081:8081"
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
 
 secrets:
   AMPQ_USER:
