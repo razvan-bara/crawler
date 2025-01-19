@@ -68,15 +68,17 @@ func main() {
 	isTstEnv := getEnvOrPanic("IS_TST")
 
 	targetHost := targetRealUrl
+	indexCount := dblpIndexCount
 	if isTstEnv == "1" {
 		targetHost = targetTestUrl
+		indexCount = dblpTestIndexCount
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/startCrawl", StartCrawl(messageQueue, targetHost)).
+	r.HandleFunc("/startCrawl", StartCrawl(messageQueue, targetHost, indexCount)).
 		Methods("POST")
 
-	initCrawlTask(targetHost, messageQueue)
+	initCrawlTask(messageQueue, targetHost, indexCount)
 
 	addr := ":8081"
 	log.Printf("Starting server on %s", addr)
@@ -85,17 +87,17 @@ func main() {
 	}
 }
 
-func StartCrawl(messageQueue *queue.MessageQueue, targetHost string) func(w http.ResponseWriter, r *http.Request) {
+func StartCrawl(messageQueue *queue.MessageQueue, targetHost string, indexCount int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		initCrawlTask(targetHost, messageQueue)
+		initCrawlTask(messageQueue, targetHost, indexCount)
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func initCrawlTask(targetHost string, messageQueue *queue.MessageQueue) {
+func initCrawlTask(messageQueue *queue.MessageQueue, targetHost string, dblpIndexCount int) {
 	for i := range dblpIndexCount {
 		path := dblpIndex
-		if i != 0 {
+		if i > 0 {
 			path = fmt.Sprintf("%s?pos=%v", dblpIndex, 300*i+1)
 		}
 		url := targetHost + path
