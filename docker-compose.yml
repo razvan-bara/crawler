@@ -36,6 +36,14 @@ services:
       timeout: 5s
       retries: 5
 
+  html_test_server:
+    build:
+      context: .
+      dockerfile: ./html_test_server/Dockerfile
+    container_name: html_test_server
+    ports:
+      - "8080:8080"
+
   app:
     build:
       context: .
@@ -46,7 +54,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      html_test_server:
+        condition: service_started
     environment:
+      IS_TST: ${IS_TST}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: ${PSQL_USER}
@@ -57,6 +68,7 @@ services:
       AMPQ_USER: ${AMPQ_USER}
       AMPQ_PASS: ${AMPQ_PASS}
       AMPQ_VHOST: ${AMPQ_VHOST}
+      TEST_WEB_SERVER_HOST: test-web-server
     ports:
       - "8081:8081"
 

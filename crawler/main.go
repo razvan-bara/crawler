@@ -65,8 +65,15 @@ func main() {
 	}
 	crawler.ConsumeTasks(messageQueue)
 
+	isTstEnv := getEnvOrPanic("IS_TST")
+
+	targetHost := targetRealUrl
+	if isTstEnv == "1" {
+		targetHost = targetTestUrl
+	}
+
 	r := mux.NewRouter()
-	r.HandleFunc("/startCrawl", StartCrawl(messageQueue)).
+	r.HandleFunc("/startCrawl", StartCrawl(messageQueue, targetHost)).
 		Methods("POST")
 
 	addr := ":8081"
@@ -76,15 +83,15 @@ func main() {
 	}
 }
 
-func StartCrawl(messageQueue *queue.MessageQueue) func(w http.ResponseWriter, r *http.Request) {
+func StartCrawl(messageQueue *queue.MessageQueue, targetHost string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		for i := range dblp_index_count {
-			path := dblp_index
+		for i := range dblpIndexCount {
+			path := dblpIndex
 			if i != 0 {
-				path = fmt.Sprintf("%s?pos=%v", dblp_index, 300*i+1)
+				path = fmt.Sprintf("%s?pos=%v", dblpIndex, 300*i+1)
 			}
-			url := real_url + path
+			url := targetHost + path
 			log.Printf("Enqueued message for: %v", url)
 
 			task := &Task{
@@ -118,7 +125,6 @@ func getEnvOrPanic(key string) string {
 	if value == "" {
 		panic(fmt.Sprintf("Environment variable %s not set", key))
 	}
-	fmt.Println(value)
 
 	return value
 }

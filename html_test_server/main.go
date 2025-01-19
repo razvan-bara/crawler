@@ -68,6 +68,7 @@ func main() {
 		"/pid/80/2813":  "dblp_dc.html",
 		"/pid/20/123":   "dblp_se.html",
 		"/pers/d/{*}":   "dblp_se.html",
+		"/pers":         "dblp_pers_index.html",
 		"/pers?pos=301": "dblp_pers_index.html",
 		"/pers?pos=601": "dblp_pers_index.html",
 	}
