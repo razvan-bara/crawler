@@ -32,8 +32,4 @@ docker-compose up -d
 ```
 
 
-### 2. Acess the API
-
-http://localhost:8081/startCrawl
-
-### 3. Look into docker container logs to see the ongoing activity
+### 2. Look into docker container logs to see the ongoing activity
