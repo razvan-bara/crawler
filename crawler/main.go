@@ -76,6 +76,8 @@ func main() {
 	r.HandleFunc("/startCrawl", StartCrawl(messageQueue, targetHost)).
 		Methods("POST")
 
+	initCrawlTask(targetHost, messageQueue)
+
 	addr := ":8081"
 	log.Printf("Starting server on %s", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
@@ -85,38 +87,40 @@ func main() {
 
 func StartCrawl(messageQueue *queue.MessageQueue, targetHost string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		initCrawlTask(targetHost, messageQueue)
+		w.WriteHeader(http.StatusOK)
+	}
+}
 
-		for i := range dblpIndexCount {
-			path := dblpIndex
-			if i != 0 {
-				path = fmt.Sprintf("%s?pos=%v", dblpIndex, 300*i+1)
-			}
-			url := targetHost + path
-			log.Printf("Enqueued message for: %v", url)
+func initCrawlTask(targetHost string, messageQueue *queue.MessageQueue) {
+	for i := range dblpIndexCount {
+		path := dblpIndex
+		if i != 0 {
+			path = fmt.Sprintf("%s?pos=%v", dblpIndex, 300*i+1)
+		}
+		url := targetHost + path
+		log.Printf("Enqueued message for: %v", url)
 
-			task := &Task{
-				Url: url,
-			}
-
-			taskJson, err := json.Marshal(task)
-			if err != nil {
-				log.Fatalf("Failed to encode JSON message: %s", err)
-			}
-
-			err = messageQueue.Publish(amqp.Publishing{
-				ContentType: "application/json",
-				Body:        taskJson,
-			})
-			if err != nil {
-				if errors.Is(err, queue.ErrorQueueMessageDuplicate) {
-					log.Println("Not allowed to enqueue duplicate url message")
-					continue
-				}
-				log.Printf("Failed to publish message: %v", err)
-			}
+		task := &Task{
+			Url: url,
 		}
 
-		w.WriteHeader(http.StatusOK)
+		taskJson, err := json.Marshal(task)
+		if err != nil {
+			log.Fatalf("Failed to encode JSON message: %s", err)
+		}
+
+		err = messageQueue.Publish(amqp.Publishing{
+			ContentType: "application/json",
+			Body:        taskJson,
+		})
+		if err != nil {
+			if errors.Is(err, queue.ErrorQueueMessageDuplicate) {
+				log.Println("Not allowed to enqueue duplicate url message")
+				continue
+			}
+			log.Printf("Failed to publish message: %v", err)
+		}
 	}
 }
 

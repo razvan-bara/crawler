@@ -19,7 +19,7 @@ import (
 const (
 	sleepTimeoutDuration   = time.Second * 5
 	poolingTimeoutDuration = time.Second * 5
-	limitHyperlinkPerPage  = 5
+	limitHyperlinkPerPage  = 10
 )
 
 type Crawler struct {
@@ -143,7 +143,6 @@ func parsePath(path string) UrlPath {
 		return UnkownPage
 	}
 	split = split[1:]
-	fmt.Println(split, len(split))
 
 	if len(split) == 1 {
 		return IndexPage

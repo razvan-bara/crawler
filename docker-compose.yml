@@ -41,6 +41,8 @@ services:
       context: .
       dockerfile: ./html_test_server/Dockerfile
     container_name: html_test_server
+    volumes:
+      - ./html_test_server/html_pages:/app/html_pages
     ports:
       - "8080:8080"
 
@@ -68,7 +70,6 @@ services:
       AMPQ_USER: ${AMPQ_USER}
       AMPQ_PASS: ${AMPQ_PASS}
       AMPQ_VHOST: ${AMPQ_VHOST}
-      TEST_WEB_SERVER_HOST: test-web-server
     ports:
       - "8081:8081"
 

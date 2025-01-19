@@ -15,10 +15,8 @@ var (
 	ipTimeoutTable = map[string]time.Time{}
 )
 
-// Interceptor middleware to be executed before serving any route
 func interceptorMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Perform any preprocessing here
 		clientIp := strings.Split(r.RemoteAddr, ":")[0]
 		ipTimeout, ok := ipTimeoutTable[clientIp]
 		if ok && time.Now().Before(ipTimeout) {
@@ -39,14 +37,13 @@ func interceptorMiddleware(next http.Handler) http.Handler {
 
 		log.Printf("Intercepting request for: %s", r.URL.Path)
 
-		// Continue to the next handler
 		next.ServeHTTP(w, r)
 	})
 }
 
 func serveHTML(filename string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		filePath := filepath.Join("html_pages", filename)
+		filePath := filepath.Join("./html_pages", filename)
 		log.Printf("Serving file: %s", filePath)
 		http.ServeFile(w, r, filePath)
 	}
@@ -57,7 +54,6 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// List of HTML files and their respective routes
 	routes := map[string]string{
 		"/citations_article1":      "citations_article1.html",
 		"/citations_article2":      "citations_article2.html",
@@ -68,20 +64,17 @@ func main() {
 		"/pid/80/2813":  "dblp_dc.html",
 		"/pid/20/123":   "dblp_se.html",
 		"/pers/d/{*}":   "dblp_se.html",
-		"/pers":         "dblp_pers_index.html",
-		"/pers?pos=301": "dblp_pers_index.html",
-		"/pers?pos=601": "dblp_pers_index.html",
+		"/pers":         "dblp_pers_index_1.html",
+		"/pers?pos=301": "dblp_pers_index_2.html",
+		"/pers?pos=601": "dblp_pers_index_3.html",
 	}
 
-	// Register routes
 	for route, file := range routes {
 		r.HandleFunc(route, serveHTML(file))
 	}
 
-	// Apply middleware
 	handlerWithMiddleware := interceptorMiddleware(r)
 
-	// Start the server
 	addr := ":8080"
 	log.Printf("Starting server on %s", addr)
 	if err := http.ListenAndServe(addr, handlerWithMiddleware); err != nil {

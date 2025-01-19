@@ -1,7 +1,7 @@
 package main
 
 const (
-	targetTestUrl = "https://html_test_server:8080"
+	targetTestUrl = "http://html_test_server:8080"
 	targetRealUrl = "https://dblp.uni-trier.de"
 
 	dblpIndex      = "/pers"
