@@ -26,7 +26,7 @@ func interceptorMiddleware(next http.Handler) http.Handler {
 		}
 
 		ipCount, ok := ipCountTable[clientIp]
-		if ipCount > 1 {
+		if ipCount > 2 {
 			ipTimeoutTable[clientIp] = time.Now().Add(5 * time.Second)
 			ipCountTable[clientIp] = 0
 			w.WriteHeader(http.StatusGatewayTimeout)
